@@ -6,8 +6,8 @@ import { Card } from '../ui/card';
 import { Button } from '../ui/button';
 import FeedbackModal from './FeedbackModal';
 import { ScrollArea } from '../ui/scroll-area';
-import { ChartContainer, BarChart, XAxis, YAxis, Tooltip, CartesianGrid, Bar, ResponsiveContainer, Legend } from "recharts";
-import { type ChartConfig } from "@/components/ui/chart";
+import { BarChart, XAxis, YAxis, Tooltip, CartesianGrid, Bar, ResponsiveContainer, Legend } from "recharts";
+import { ChartContainer, type ChartConfig } from "@/components/ui/chart";
 
 const chartConfig = {
   completed: {
@@ -91,14 +91,16 @@ export default function DriverPerformanceModal({ isOpen, onClose, deliveries, us
                     <div className="space-y-6">
                         <Card className="p-4">
                             <ChartContainer config={chartConfig} className="min-h-[200px] w-full">
-                                <BarChart accessibilityLayer data={driverStats}>
-                                    <CartesianGrid vertical={false} />
-                                    <XAxis dataKey="displayName" tickLine={false} tickMargin={10} axisLine={false} />
-                                    <YAxis />
-                                    <Tooltip />
-                                    <Legend />
-                                    <Bar dataKey="completed" fill="var(--color-completed)" radius={4} />
-                                </BarChart>
+                                <ResponsiveContainer>
+                                    <BarChart accessibilityLayer data={driverStats}>
+                                        <CartesianGrid vertical={false} />
+                                        <XAxis dataKey="displayName" tickLine={false} tickMargin={10} axisLine={false} />
+                                        <YAxis />
+                                        <Tooltip />
+                                        <Legend />
+                                        <Bar dataKey="completed" fill="var(--color-completed)" radius={4} />
+                                    </BarChart>
+                                </ResponsiveContainer>
                             </ChartContainer>
                         </Card>
                         <ScrollArea className="h-[40vh]">
