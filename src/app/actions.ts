@@ -42,6 +42,7 @@ export async function login(prevState: any, formData: FormData) {
     if (userDoc.exists() && userDoc.data().status === 'active') {
         await createSession(userCredential.user.uid, userDoc.data())
     } else {
+        const auth = getAuth();
         await signOut(auth);
         return { type: 'error', message: 'Account is inactive or pending approval.' }
     }
@@ -123,8 +124,6 @@ export async function forgotPassword(prevState: any, formData: FormData) {
 
 
 export async function logout() {
-  const auth = getAuth();
-  await signOut(auth);
   await deleteSession()
   redirect('/login')
 }

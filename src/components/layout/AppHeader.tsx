@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { logout } from "@/app/actions";
+import { LogoutButton } from "../shared/LogoutButton";
 
 interface AppHeaderProps {
     user: {
@@ -33,9 +34,7 @@ export function AppHeader({ user, onAdminPanelOpen, onDriverDashboardOpen }: App
                     {isAdmin && (
                         <Button onClick={onAdminPanelOpen} variant="default" size="sm">Admin Panel</Button>
                     )}
-                    <form action={logout}>
-                        <Button type="submit" variant="secondary" size="sm">Logout</Button>
-                    </form>
+                    <LogoutButton />
                 </div>
             </div>
         </header>
