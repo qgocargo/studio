@@ -7,7 +7,7 @@ import PublicFeedbackView from '@/components/public/PublicFeedbackView'
 import MainApp from '@/components/dashboard/MainApp'
 
 async function getFirestoreData(user: any) {
-  if (!user || !user.uid) {
+  if (!user?.uid) {
     return { deliveries: [], feedback: [], jobFiles: [], users: [] };
   }
 
@@ -20,10 +20,10 @@ async function getFirestoreData(user: any) {
       getDocs(feedbackQuery)
     ]);
     
-    const deliveries = deliveriesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data(), createdAt: doc.data().createdAt?.toDate().toISOString() }));
+    const deliveries = deliveriesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data(), createdAt: doc.data().createdAt?.toDate().toISOString(), completedAt: doc.data().completedAt?.toDate().toISOString() }));
     const feedback = feedbackSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data(), createdAt: doc.data().createdAt?.toDate().toISOString() }));
     
-    return { deliveries, feedback };
+    return { deliveries, feedback, users: [], jobFiles: [] };
   } else {
     // Admin or Staff
     const deliveriesQuery = query(collection(db, 'deliveries'), orderBy("createdAt", "desc"));
