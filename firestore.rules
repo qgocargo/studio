@@ -1,0 +1,68 @@
+
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+  
+    // Helper functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isUser(uid) {
+      return isSignedIn() && request.auth.uid == uid;
+    }
+    
+    function isStaff() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['admin', 'user', 'checker'];
+    }
+
+    function isAdmin() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+
+    // Collection: users
+    match /users/{userId} {
+      // Admins can read/write any user document
+      // Users can only read their own document
+      allow read: if isAdmin() || isUser(userId);
+      allow write: if isAdmin();
+      // Allow user creation for anyone signed up
+      allow create: if isSignedIn();
+    }
+
+    // Collection: deliveries
+    match /deliveries/{deliveryId} {
+      // Staff can read/write all deliveries
+      // Drivers can only read deliveries assigned to them
+      allow read: if isStaff() || (isSignedIn() && resource.data.driverUid == request.auth.uid);
+      allow write: if isStaff();
+      // Allow feedback submission by updating feedbackStatus
+      allow update: if isSignedIn() && request.resource.data.feedbackStatus == 'rated';
+    }
+    
+    // Collection: jobfiles
+    match /jobfiles/{jobFileId} {
+      // Only staff can read jobfiles
+      allow read: if isStaff();
+      allow write: if isStaff();
+    }
+    
+    // Collection: pods (Proof of Delivery)
+    match /pods/{podId} {
+        // Staff and the assigned driver can read the POD
+        allow read: if isStaff() || (isSignedIn() && get(/databases/$(database)/documents/deliveries/$(podId)).data.driverUid == request.auth.uid);
+        // Only staff can create/update/delete (e.g. cancel POD)
+        allow write: if isStaff();
+    }
+    
+    // Collection: feedback
+    match /feedback/{feedbackId} {
+        // Staff can read all feedback
+        // Drivers can read their own feedback
+        allow read: if isStaff() || (isSignedIn() && resource.data.driverUid == request.auth.uid);
+        // Any authenticated user can create feedback (i.e. the customer)
+        allow create: if isSignedIn();
+    }
+  }
+}
