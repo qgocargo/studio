@@ -10,7 +10,7 @@ import { DeliveriesList } from '@/components/dashboard/DeliveriesList';
 import ReceiptModal from '@/components/modals/ReceiptModal';
 import { Skeleton } from '../ui/skeleton';
 
-export default function AdminDashboard({ user }: { user: any }) {
+export default function AdminDashboard({ user, onUsersLoaded }: { user: any, onUsersLoaded: (users: any[]) => void }) {
     const [deliveries, setDeliveries] = useState([]);
     const [jobFiles, setJobFiles] = useState([]);
     const [users, setUsers] = useState([]);
@@ -31,7 +31,7 @@ export default function AdminDashboard({ user }: { user: any }) {
         const queries = [
             { coll: 'deliveries', stateSetter: setDeliveries, q: query(collection(db, 'deliveries'), orderBy('createdAt', 'desc')) },
             { coll: 'jobfiles', stateSetter: setJobFiles, q: query(collection(db, 'jobfiles')) },
-            { coll: 'users', stateSetter: setUsers, q: query(collection(db, 'users')) },
+            { coll: 'users', stateSetter: (data: any[]) => { setUsers(data); onUsersLoaded(data); }, q: query(collection(db, 'users')) },
         ];
 
         const unsubs = queries.map(({ coll, stateSetter, q }) => {
@@ -59,7 +59,7 @@ export default function AdminDashboard({ user }: { user: any }) {
             unsubs.forEach(unsub => unsub());
             clearTimeout(initialLoadTimer);
         };
-    }, [user.role]);
+    }, [user.role, onUsersLoaded]);
 
     const handleViewReceipt = (deliveryId: string) => {
         setSelectedDeliveryId(deliveryId);

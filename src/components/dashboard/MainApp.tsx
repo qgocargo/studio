@@ -11,6 +11,7 @@ import DriverPerformanceModal from "../modals/DriverPerformanceModal";
 export default function MainApp({ user, initialData }: { user: any; initialData: any }) {
   const [isAdminPanelOpen, setIsAdminPanelOpen] = useState(false);
   const [isDriverDashboardOpen, setIsDriverDashboardOpen] = useState(false);
+  const [users, setUsers] = useState(initialData.users || []);
 
   // Since initialData is now empty, we pass it down but the components
   // themselves are responsible for fetching what they need.
@@ -25,14 +26,14 @@ export default function MainApp({ user, initialData }: { user: any; initialData:
       {user.role === 'driver' ? (
         <DriverDashboard user={user} initialDeliveries={initialData.deliveries || []} initialFeedback={initialData.feedback || []} />
       ) : (
-        <AdminDashboard user={user} />
+        <AdminDashboard user={user} onUsersLoaded={setUsers} />
       )}
 
       {user.role === 'admin' && (
         <AdminPanelModal
           isOpen={isAdminPanelOpen}
           onClose={() => setIsAdminPanelOpen(false)}
-          users={initialData.users || []}
+          users={users}
           currentUser={user}
         />
       )}
@@ -42,7 +43,7 @@ export default function MainApp({ user, initialData }: { user: any; initialData:
             isOpen={isDriverDashboardOpen}
             onClose={() => setIsDriverDashboardOpen(false)}
             deliveries={initialData.deliveries || []}
-            users={initialData.users || []}
+            users={users}
             feedback={initialData.feedback || []}
         />
       )}
