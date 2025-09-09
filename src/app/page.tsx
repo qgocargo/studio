@@ -43,9 +43,8 @@ async function getFirestoreData(user: any) {
   ]);
 
   const deliveries = deliveriesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data(), createdAt: doc.data().createdAt?.toDate().toISOString(), completedAt: doc.data().completedAt?.toDate().toISOString() }));
-  const feedback = feedbackSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data(), createdAt: doc.data().createdAt?.toDate().toISOString() }));
+  const feedback = feedbackSnapshot ? feedbackSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data(), createdAt: doc.data().createdAt?.toDate().toISOString() })) : [];
   const jobFiles = jobFilesSnapshot ? jobFilesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) : [];
-  // Only return all users if the current user is an admin
   const users = usersSnapshot ? usersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) : [];
 
   return { deliveries, feedback, jobFiles, users };
