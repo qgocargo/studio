@@ -14,7 +14,7 @@ import { Skeleton } from '../ui/skeleton';
 export default function DriverDashboard({ user, initialDeliveries, initialFeedback }: { user: any, initialDeliveries: any[], initialFeedback: any[] }) {
     const [deliveries, setDeliveries] = useState(initialDeliveries);
     const [feedback, setFeedback] = useState(initialFeedback);
-    const [loading, setLoading] = useState(!initialDeliveries.length);
+    const [loading, setLoading] = useState(false);
 
     const [isCompletionModalOpen, setIsCompletionModalOpen] = useState(false);
     const [isReceiptModalOpen, setIsReceiptModalOpen] = useState(false);
@@ -83,7 +83,7 @@ export default function DriverDashboard({ user, initialDeliveries, initialFeedba
                 <Button onClick={handleViewFeedback} className="text-sm mt-3 sm:mt-0">My Feedback & Ratings</Button>
             </div>
 
-            {loading ? (
+            {loading && initialDeliveries.length === 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <Skeleton className="h-24" />
                     <Skeleton className="h-24" />
@@ -97,7 +97,7 @@ export default function DriverDashboard({ user, initialDeliveries, initialFeedba
                 tasks={deliveries}
                 onComplete={handleCompleteDelivery}
                 onViewReceipt={handleViewReceipt}
-                loading={loading}
+                loading={loading && initialDeliveries.length === 0}
             />
 
             {isCompletionModalOpen && selectedDelivery && (

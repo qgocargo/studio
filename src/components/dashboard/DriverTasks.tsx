@@ -35,7 +35,10 @@ export default function DriverTasks({ tasks, onComplete, onViewReceipt, loading 
     const sortedTasks = [...tasks].sort((a,b) => {
         if (a.status === 'Pending' && b.status !== 'Pending') return -1;
         if (a.status !== 'Pending' && b.status === 'Pending') return 1;
-        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+        // Fallback to createdAt sorting if available
+        const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+        const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+        return dateB - dateA;
     });
 
     return (
