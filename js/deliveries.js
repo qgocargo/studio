@@ -1,7 +1,7 @@
-import { getFirestore, collection, query, where, onSnapshot, orderBy, addDoc, serverTimestamp, getDocs } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
+import { getFirestore, collection, query, where, onSnapshot, orderBy, addDoc, serverTimestamp, getDocs, doc, updateDoc, writeBatch } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
 import { getCurrentUser } from './auth.js';
 import { showToast, showModal, hideModal } from './ui.js';
-import { generateTrackingLink, uploadFile } from './utils.js';
+import { uploadFile } from './utils.js';
 import { showPodReceipt } from './pods.js';
 
 const db = getFirestore();
@@ -81,6 +81,7 @@ function listenForDeliveries() {
     const user = getCurrentUser();
     if (!user) return;
 
+    console.log("Setting up listener for user:", user.uid);
     const deliveriesRef = collection(db, "deliveries");
     const q = query(deliveriesRef, where("driverUid", "==", user.uid), orderBy("createdAt", "desc"));
 
@@ -100,8 +101,8 @@ function listenForDeliveries() {
         });
     }, (error) => {
         console.error("Error fetching deliveries: ", error);
-        showToast("Could not load deliveries.", "error");
-        document.getElementById('jobs-loader').innerHTML = `<p class="text-red-500">Error loading data.</p>`;
+        showToast("Could not load deliveries. Check console for details.", "error");
+        document.getElementById('jobs-loader').innerHTML = `<p class="text-red-500">Error loading data. You may not have permission to view deliveries.</p>`;
     });
 }
 
@@ -161,7 +162,6 @@ async function handleCreatePod(e) {
     button.textContent = 'Assigning...';
 
     try {
-        const { getDoc, doc } = await import("https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js");
         const jobFileDoc = await getDoc(doc(db, 'jobfiles', jobFileId));
         const driverDoc = await getDoc(doc(db, 'users', driverUid));
 
@@ -311,8 +311,6 @@ async function openCompletionModal(deliveryId, deliveryData) {
                 });
                 photoUrls = await Promise.all(uploadPromises);
             }
-
-            const { doc, setDoc, updateDoc, writeBatch } = await import("https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js");
             
             const podData = {
                 ...deliveryData,
