@@ -12,22 +12,20 @@ async function getFirestoreData(user: any) {
     return { deliveries: [], feedback: [], jobFiles: [], users: [] };
   }
 
-  // Scoped queries based on user role to respect security rules
-  const deliveriesQuery = user.role === 'driver' 
-    ? query(collection(db, "deliveries"), where("driverUid", "==", user.uid), orderBy("createdAt", "desc"))
-    : query(collection(db, 'deliveries'), orderBy("createdAt", "desc"));
+  // Common queries for all roles
+  const deliveriesPromise = user.role === 'driver'
+    ? getDocs(query(collection(db, "deliveries"), where("driverUid", "==", user.uid), orderBy("createdAt", "desc")))
+    : getDocs(query(collection(db, 'deliveries'), orderBy("createdAt", "desc")));
   
-  const feedbackQuery = user.role === 'driver'
-    ? query(collection(db, "feedback"), where("driverUid", "==", user.uid))
-    : query(collection(db, 'feedback'));
+  const feedbackPromise = user.role === 'driver'
+    ? getDocs(query(collection(db, "feedback"), where("driverUid", "==", user.uid)))
+    : getDocs(query(collection(db, 'feedback')));
 
-  const deliveriesPromise = getDocs(deliveriesQuery);
-  const feedbackPromise = getDocs(feedbackQuery);
-  
+  // Role-specific queries
   let jobFilesPromise = Promise.resolve(null);
   let usersPromise = Promise.resolve(null);
 
-  if (user.role === 'admin' || user.role === 'user') {
+  if (user.role === 'admin' || user.role === 'user' || user.role === 'checker') {
     jobFilesPromise = getDocs(collection(db, 'jobfiles'));
   }
   
