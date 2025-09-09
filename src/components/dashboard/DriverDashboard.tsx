@@ -11,10 +11,10 @@ import FeedbackModal from '../modals/FeedbackModal';
 import { Button } from '../ui/button';
 import { Skeleton } from '../ui/skeleton';
 
-export default function DriverDashboard({ user, initialDeliveries, initialFeedback }: { user: any, initialDeliveries: any[], initialFeedback: any[] }) {
-    const [deliveries, setDeliveries] = useState(initialDeliveries);
-    const [feedback, setFeedback] = useState(initialFeedback);
-    const [loading, setLoading] = useState(false);
+export default function DriverDashboard({ user }: { user: any }) {
+    const [deliveries, setDeliveries] = useState<any[]>([]);
+    const [feedback, setFeedback] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
 
     const [isCompletionModalOpen, setIsCompletionModalOpen] = useState(false);
     const [isReceiptModalOpen, setIsReceiptModalOpen] = useState(false);
@@ -22,9 +22,10 @@ export default function DriverDashboard({ user, initialDeliveries, initialFeedba
     const [selectedDelivery, setSelectedDelivery] = useState<any | null>(null);
 
     useEffect(() => {
-        if (!user?.uid) return;
-
-        setLoading(true);
+        if (!user?.uid) {
+            setLoading(false);
+            return;
+        };
 
         const deliveriesQuery = query(collection(db, "deliveries"), where("driverUid", "==", user.uid), orderBy("createdAt", "desc"));
         const feedbackQuery = query(collection(db, "feedback"), where("driverUid", "==", user.uid));
@@ -35,8 +36,8 @@ export default function DriverDashboard({ user, initialDeliveries, initialFeedba
                 return { 
                     id: doc.id, 
                     ...data,
-                    createdAt: data.createdAt?.toDate().toISOString(),
-                    completedAt: data.completedAt?.toDate().toISOString()
+                    createdAt: data.createdAt?.toDate ? data.createdAt.toDate().toISOString() : null,
+                    completedAt: data.completedAt?.toDate ? data.completedAt.toDate().toISOString() : null
                 };
             });
             setDeliveries(freshDeliveries);
@@ -52,7 +53,7 @@ export default function DriverDashboard({ user, initialDeliveries, initialFeedba
                 return { 
                     id: doc.id,
                     ...data, 
-                    createdAt: data.createdAt?.toDate().toISOString()
+                    createdAt: data.createdAt?.toDate ? data.createdAt.toDate().toISOString() : null
                 };
             });
             setFeedback(freshFeedback);
@@ -85,7 +86,7 @@ export default function DriverDashboard({ user, initialDeliveries, initialFeedba
                 <Button onClick={handleViewFeedback} className="text-sm mt-3 sm:mt-0">My Feedback & Ratings</Button>
             </div>
 
-            {loading && deliveries.length === 0 ? (
+            {loading ? (
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <Skeleton className="h-24" />
                     <Skeleton className="h-24" />
@@ -99,7 +100,7 @@ export default function DriverDashboard({ user, initialDeliveries, initialFeedba
                 tasks={deliveries}
                 onComplete={handleCompleteDelivery}
                 onViewReceipt={handleViewReceipt}
-                loading={loading && deliveries.length === 0}
+                loading={loading}
             />
 
             {isCompletionModalOpen && selectedDelivery && (

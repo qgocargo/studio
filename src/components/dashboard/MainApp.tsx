@@ -24,7 +24,7 @@ export default function MainApp({ user, initialData }: { user: any; initialData:
       />
 
       {user.role === 'driver' ? (
-        <DriverDashboard user={user} initialDeliveries={initialData.deliveries || []} initialFeedback={initialData.feedback || []} />
+        <DriverDashboard user={user} />
       ) : (
         <AdminDashboard user={user} onUsersLoaded={setUsers} />
       )}
