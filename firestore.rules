@@ -3,47 +3,84 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Helper functions
-    function isOwner(userId) {
-      return request.auth.uid == userId;
+    // Helper function to get the role of the requesting user.
+    function getUserRole(userId) {
+      return get(/databases/$(database)/documents/users/$(userId)).data.role;
     }
 
-    // Public read access for all collections needed by the app
-    match /{collection}/{docId} 
-      where collection in ['deliveries', 'users', 'jobfiles', 'pods', 'feedback'] {
-      allow read: if true;
+    // A list of internal staff roles that can access core data.
+    function isStaff() {
+      // Important: request.auth can be null
+      if (request.auth == null) {
+        return false;
+      }
+      let userRole = getUserRole(request.auth.uid);
+      return userRole in ['admin', 'checker', 'user'];
     }
 
-    // Deliveries: Only authenticated users can create/update
+    // == USER PROFILES ==
+    match /users/{userId} {
+      // Allow public read for development
+      allow read, list: if true;
+      allow create: if request.auth.uid == userId;
+      allow update: if getUserRole(request.auth.uid) == 'admin';
+      allow delete: if getUserRole(request.auth.uid) == 'admin' && resource.data.role != 'admin';
+    }
+
+    // == JOB FILES ==
+    match /jobfiles/{jobfileId} {
+      // Allow public read for development
+      allow read, list: if true;
+      
+      allow create: if request.auth != null && isStaff();
+      // Allow updates by the original creator, an admin, or a checker.
+      allow update: if request.auth != null && (
+        resource.data.createdBy == get(/databases/$(database)/documents/users/$(request.auth.uid)).data.displayName ||
+        getUserRole(request.auth.uid) in ['admin', 'checker']
+      );
+      // Only admins can delete.
+      allow delete: if getUserRole(request.auth.uid) == 'admin';
+    }
+
+    // == DELIVERIES ==
     match /deliveries/{deliveryId} {
-      allow write: if request.auth != null;
+        // Allow public read for development
+        allow read, list: if true;
+        allow create: if request.auth != null && isStaff();
+        allow update: if request.auth != null && (
+            request.auth.uid == resource.data.driverUid || isStaff()
+        );
     }
 
-    // Pods: Only authenticated users can create/update
+    // == PROOF OF DELIVERY (POD) ==
     match /pods/{podId} {
-       allow write: if request.auth != null;
+      // Public access for single POD GET (for QR code on receipts).
+      allow get, read, list: if true; 
+
+      // Only the assigned driver can create the POD record.
+      allow create: if request.auth != null && request.auth.uid == request.resource.data.driverUid;
+      
+      // Only admins can delete a POD record.
+      allow delete: if request.auth != null && getUserRole(request.auth.uid) == 'admin';
     }
-    
-    // Feedback: Anyone can create feedback
+
+    // == FEEDBACK ==
     match /feedback/{feedbackId} {
+      // Allow public read for development
+      allow read, list: if true;
+      // Anyone can submit feedback.
       allow create: if true;
     }
 
-    // Users: Only an admin can update user status.
-    match /users/{userId} {
-      function isStaff() {
-        return request.auth.uid != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['admin', 'user', 'checker'];
-      }
-      allow create: if request.auth.uid == userId;
-      allow update: if isStaff();
+    // == OTHER COLLECTIONS ==
+    match /clients/{doc=**} {
+      // Only staff can read or write to the client list.
+      allow read, write: if request.auth != null && isStaff();
     }
-    
-    // Jobfiles: only staff can write
-     match /jobfiles/{jobfileId} {
-        function isStaff() {
-            return request.auth.uid != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['admin', 'user', 'checker'];
-        }
-        allow write: if isStaff();
+
+    match /deleted_jobfiles/{doc=**} {
+      // Only admins can access the recycle bin.
+      allow read, write: if request.auth != null && getUserRole(request.auth.uid) == 'admin';
     }
   }
 }
