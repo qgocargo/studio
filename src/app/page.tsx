@@ -1,3 +1,4 @@
+
 import { getSession } from '@/lib/session'
 import { redirect } from 'next/navigation'
 import { doc, getDoc, collection, getDocs, query, where, orderBy } from 'firebase/firestore'
@@ -11,40 +12,42 @@ async function getFirestoreData(user: any) {
     return { deliveries: [], feedback: [], jobFiles: [], users: [] };
   }
 
-  if (user.role === 'driver') {
-    const deliveriesQuery = query(collection(db, "deliveries"), where("driverUid", "==", user.uid), orderBy("createdAt", "desc"));
-    const feedbackQuery = query(collection(db, "feedback"), where("driverUid", "==", user.uid));
+  const deliveriesQuery = user.role === 'driver' 
+    ? query(collection(db, "deliveries"), where("driverUid", "==", user.uid), orderBy("createdAt", "desc"))
+    : query(collection(db, 'deliveries'), orderBy("createdAt", "desc"));
+  
+  const feedbackQuery = user.role === 'driver'
+    ? query(collection(db, "feedback"), where("driverUid", "==", user.uid))
+    : query(collection(db, 'feedback'));
 
-    const [deliveriesSnapshot, feedbackSnapshot] = await Promise.all([
-      getDocs(deliveriesQuery),
-      getDocs(feedbackQuery)
-    ]);
-    
-    const deliveries = deliveriesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data(), createdAt: doc.data().createdAt?.toDate().toISOString(), completedAt: doc.data().completedAt?.toDate().toISOString() }));
-    const feedback = feedbackSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data(), createdAt: doc.data().createdAt?.toDate().toISOString() }));
-    
-    return { deliveries, feedback, users: [], jobFiles: [] };
-  } else {
-    // Admin or Staff
-    const deliveriesQuery = query(collection(db, 'deliveries'), orderBy("createdAt", "desc"));
-    const jobFilesPromise = getDocs(collection(db, 'jobfiles'));
-    const usersPromise = getDocs(collection(db, 'users'));
-    const feedbackPromise = getDocs(collection(db, 'feedback'));
+  const deliveriesPromise = getDocs(deliveriesQuery);
+  const feedbackPromise = getDocs(feedbackQuery);
+  
+  let jobFilesPromise = Promise.resolve(null);
+  let usersPromise = Promise.resolve(null);
 
-    const [deliveriesSnapshot, jobFilesSnapshot, usersSnapshot, feedbackSnapshot] = await Promise.all([
-      getDocs(deliveriesQuery),
-      jobFilesPromise,
-      usersPromise,
-      feedbackPromise,
-    ]);
-
-    const deliveries = deliveriesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data(), createdAt: doc.data().createdAt?.toDate().toISOString(), completedAt: doc.data().completedAt?.toDate().toISOString() }));
-    const jobFiles = jobFilesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-    const users = usersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-    const feedback = feedbackSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data(), createdAt: doc.data().createdAt?.toDate().toISOString() }));
-
-    return { deliveries, jobFiles, users, feedback };
+  if (user.role === 'admin' || user.role === 'user') {
+    jobFilesPromise = getDocs(collection(db, 'jobfiles'));
   }
+  
+  // Only admin can fetch all users as per security rules
+  if (user.role === 'admin') {
+    usersPromise = getDocs(collection(db, 'users'));
+  }
+
+  const [deliveriesSnapshot, feedbackSnapshot, jobFilesSnapshot, usersSnapshot] = await Promise.all([
+    deliveriesPromise,
+    feedbackPromise,
+    jobFilesPromise,
+    usersPromise,
+  ]);
+
+  const deliveries = deliveriesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data(), createdAt: doc.data().createdAt?.toDate().toISOString(), completedAt: doc.data().completedAt?.toDate().toISOString() }));
+  const feedback = feedbackSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data(), createdAt: doc.data().createdAt?.toDate().toISOString() }));
+  const jobFiles = jobFilesSnapshot ? jobFilesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) : [];
+  const users = usersSnapshot ? usersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) : [];
+
+  return { deliveries, feedback, jobFiles, users };
 }
 
 export default async function Home({ searchParams }: { searchParams: { [key: string]: string | string[] | undefined } }) {
