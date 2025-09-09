@@ -1,6 +1,7 @@
 import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-storage.js";
+import { app } from './firebase.js'; // Import the initialized app
 
-const storage = getStorage();
+const storage = getStorage(app);
 
 export function generateTrackingLink(podId) {
     const path = window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/') + 1);
@@ -43,3 +44,5 @@ export async function generatePdf(element) {
     pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, imgHeight);
     return pdf;
 }
+
+    

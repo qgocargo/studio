@@ -1,11 +1,10 @@
-import { getFirestore, collection, getDocs, query, where, Timestamp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
+import { collection, getDocs, query, where, Timestamp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
+import { db } from './firebase.js'; // Import db from the central file
 import { getCurrentUser } from './auth.js';
 import { showToast } from "./ui.js";
 
 // Chart.js is large, so we'll dynamically import it when needed.
 let Chart;
-
-const db = getFirestore();
 
 function getStartOfMonth() {
     const now = new Date();
@@ -137,3 +136,5 @@ async function loadAnalyticsData() {
         }
     });
 }
+
+    

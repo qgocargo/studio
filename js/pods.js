@@ -1,8 +1,7 @@
 import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
 import { showModal, hideModal, showToast } from "./ui.js";
 import { generatePdf } from "./utils.js";
-
-const db = getFirestore();
+import { db } from './firebase.js'; // Import db from the central file
 
 export async function showPodReceipt(podId) {
     const modalContent = `
@@ -36,7 +35,7 @@ async function renderReceipt(data) {
     
     // Dynamically import QRCode library
     const { default: QRCode } = await import('https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js');
-    const trackingUrl = window.location.href.replace('index.html', '').replace(/#.*$/, '') + 'track.html?id=' + jobFileId;
+    const trackingUrl = window.location.href.replace(/index\.html$/, '') + 'track.html?id=' + jobFileId;
     const qrCodeDataUrl = await QRCode.toDataURL(trackingUrl, { width: 80 });
 
     wrapper.innerHTML = `
@@ -107,3 +106,5 @@ async function renderReceipt(data) {
         }
     });
 }
+
+    

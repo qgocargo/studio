@@ -1,10 +1,10 @@
-import { getFirestore, collection, query, where, onSnapshot, orderBy, addDoc, serverTimestamp, getDocs, doc, updateDoc, writeBatch } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
+import { collection, query, where, onSnapshot, orderBy, addDoc, serverTimestamp, getDocs, doc, updateDoc, writeBatch } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
+import { db } from './firebase.js'; // Import db from the central file
 import { getCurrentUser } from './auth.js';
 import { showToast, showModal, hideModal } from './ui.js';
 import { uploadFile } from './utils.js';
 import { showPodReceipt } from './pods.js';
 
-const db = getFirestore();
 let deliveriesUnsubscribe = null;
 
 // RENDER PAGES ------------------------------------------
@@ -451,3 +451,5 @@ function setupJobFileSearch() {
         }
     });
 }
+
+    

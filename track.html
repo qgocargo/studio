@@ -13,24 +13,21 @@
     </style>
 </head>
 <body class="antialiased text-gray-800">
-
-    <script>
-      const firebaseConfig = {
-        apiKey: "AIzaSyAAulR2nJQm-4QtNyEqKTnnDPw-iKW92Mc",
-        authDomain: "my-job-file-system.firebaseapp.com",
-        projectId: "my-job-file-system",
-        storageBucket: "my-job-file-system.appspot.com",
-        messagingSenderId: "145307873304",
-        appId: "1:145307873304:web:d661ea6ec118801b4a136d",
-        measurementId: "G-8EHX5K7YHL"
-      };
-    </script>
     
     <!-- Firebase SDKs -->
     <script type="module">
-        import { initializeApp from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
         import { getFirestore, getDoc, doc } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
 
+        const firebaseConfig = {
+            apiKey: "AIzaSyAAulR2nJQm-4QtNyEqKTnnDPw-iKW92Mc",
+            authDomain: "my-job-file-system.firebaseapp.com",
+            projectId: "my-job-file-system",
+            storageBucket: "my-job-file-system.appspot.com",
+            messagingSenderId: "145307873304",
+            appId: "1:145307873304:web:d661ea6ec118801b4a136d",
+            measurementId: "G-8EHX5K7YHL"
+        };
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
@@ -49,12 +46,15 @@
             }
 
             try {
+                // The podId is actually the deliveryId, which is what we use as the document ID in the 'pods' collection
                 const podRef = doc(db, 'pods', podId);
                 const podSnap = await getDoc(podRef);
 
                 if (podSnap.exists()) {
                     renderPodData(podSnap.data());
                 } else {
+                    // It's possible the link is to a job file ID before the POD is created.
+                    // For this static version, we'll just show not found if the pod doesn't exist.
                     notFoundMessage.classList.remove('hidden');
                 }
             } catch (error) {
@@ -88,12 +88,15 @@
 
             const photosContainer = document.getElementById('photos-container');
             if (photoUrls && photoUrls.length > 0) {
+                photosContainer.innerHTML = '<h3 class="font-bold mb-2">Delivery Photos</h3>';
                 photoUrls.forEach(url => {
+                    const imgContainer = document.createElement('div');
                     const img = document.createElement('img');
                     img.src = url;
                     img.className = "w-full h-auto rounded-lg shadow-md";
                     img.alt = "Delivery Photo";
-                    photosContainer.appendChild(img);
+                    imgContainer.appendChild(img);
+                    photosContainer.appendChild(imgContainer);
                 });
                 photosContainer.classList.remove('hidden');
             }
@@ -120,7 +123,7 @@
 
         <div id="not-found" class="text-center py-10 hidden">
             <p class="text-xl text-red-600">Delivery Not Found</p>
-            <p class="text-gray-500 mt-2">The tracking ID is invalid or the delivery does not exist.</p>
+            <p class="text-gray-500 mt-2">The tracking ID is invalid or the delivery has not been completed yet.</p>
         </div>
         
         <main id="pod-content" class="bg-white rounded-lg shadow-lg p-6 space-y-6 hidden">
@@ -150,13 +153,13 @@
             <div class="pt-4 border-t">
                 <h3 class="font-bold mb-2">Receiver's Signature</h3>
                 <div class="bg-gray-100 p-2 rounded-md inline-block">
-                    <img id="signature-img" src="" alt="Receiver's Signature" class="hidden">
+                    <img id="signature-img" src="" alt="Receiver's Signature" class="hidden max-w-full h-auto">
                 </div>
             </div>
 
             <!-- Photos -->
             <div id="photos-container" class="pt-4 border-t hidden space-y-4">
-                <h3 class="font-bold mb-2">Delivery Photos</h3>
+                <!-- Photos will be inserted here by JS -->
             </div>
         </main>
 
@@ -166,3 +169,5 @@
     </div>
 </body>
 </html>
+
+    
