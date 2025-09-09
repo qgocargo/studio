@@ -31,12 +31,12 @@ export async function showPodReceipt(podId) {
 
 async function renderReceipt(data) {
     const wrapper = document.getElementById('receipt-content-wrapper');
-    const { jobFileData, receiverName, completedAt, deliveryLocation, signatureDataUrl, photoUrls } = data;
+    const { jobFileData, receiverName, completedAt, deliveryLocation, signatureDataUrl, photoUrls, jobFileId } = data;
     const kuwaitTime = new Date(completedAt.seconds * 1000).toLocaleString('en-US', { timeZone: 'Asia/Kuwait' });
     
     // Dynamically import QRCode library
     const { default: QRCode } = await import('https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js');
-    const trackingUrl = `${window.location.origin}/track.html?id=${data.jobFileId}`;
+    const trackingUrl = window.location.href.replace('index.html', '').replace(/#.*$/, '') + 'track.html?id=' + jobFileId;
     const qrCodeDataUrl = await QRCode.toDataURL(trackingUrl, { width: 80 });
 
     wrapper.innerHTML = `

@@ -3,7 +3,8 @@ import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstati
 const storage = getStorage();
 
 export function generateTrackingLink(podId) {
-    const url = new URL('/track.html', window.location.origin);
+    const path = window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/') + 1);
+    const url = new URL(path + 'track.html', window.location.origin);
     url.searchParams.set('id', podId);
     return url.href;
 }

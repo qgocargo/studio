@@ -1,7 +1,8 @@
-import { getFirestore, collection, query, where, onSnapshot, orderBy, addDoc, serverTimestamp, getDocs } from "https://www_gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
+import { getFirestore, collection, query, where, onSnapshot, orderBy, addDoc, serverTimestamp, getDocs } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
 import { getCurrentUser } from './auth.js';
 import { showToast, showModal, hideModal } from './ui.js';
 import { generateTrackingLink, uploadFile } from './utils.js';
+import { showPodReceipt } from './pods.js';
 
 const db = getFirestore();
 let deliveriesUnsubscribe = null;
@@ -137,7 +138,7 @@ function createJobCard(id, data) {
     card.querySelector('[data-action="complete"]')?.addEventListener('click', () => {
         openCompletionModal(id, data);
     });
-    // card.querySelector('[data-action="view-receipt"]')?.addEventListener('click', () => showReceipt(id));
+    card.querySelector('[data-action="view-receipt"]')?.addEventListener('click', () => showPodReceipt(id));
     return card;
 }
 

@@ -8,7 +8,7 @@
     
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#243c5a">
-    <link rel="apple-touch-icon" href="/assets/logo-192.png">
+    <link rel="apple-touch-icon" href="assets/logo-192.png">
 
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -58,7 +58,7 @@
         
         document.addEventListener('DOMContentLoaded', () => {
             if ('serviceWorker' in navigator) {
-                navigator.serviceWorker.register('/service-worker.js')
+                navigator.serviceWorker.register('service-worker.js')
                     .then(registration => console.log('Service Worker registered with scope:', registration.scope))
                     .catch(error => console.log('Service Worker registration failed:', error));
             }
@@ -110,7 +110,7 @@
     </div>
 
     <!-- Login Page -->
-    <div id="login-page" class="w-full h-full flex items-center justify-center p-4 hidden">
+    <div id="login-page" class="w-full h-full flex items-center justify-center p-4">
         <div class="w-full max-w-sm">
             <div class="text-center mb-6">
                 <h1 class="qg-logo text-4xl">Q'go<span>Cargo</span></h1>
