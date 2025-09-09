@@ -11,7 +11,11 @@ service cloud.firestore {
     // A list of internal staff roles that can access core data.
     function isStaff() {
       // Check for auth existence before trying to access uid.
-      return request.auth != null && getUserRole(request.auth.uid) in ['admin', 'checker', 'user'];
+      return request.auth != null && getUserRole(request.auth.uid) in ['admin', 'user'];
+    }
+    
+    function isDriver() {
+      return request.auth != null && getUserRole(request.auth.uid) == 'driver';
     }
 
     // == USER PROFILES ==
@@ -25,24 +29,17 @@ service cloud.firestore {
     // == JOB FILES ==
     match /jobfiles/{jobfileId} {
       allow read, list, create: if isStaff();
-
-      // Allow updates by the original creator, an admin, or a checker.
-      allow update: if isStaff() && (
-        resource.data.createdBy == get(/databases/$(database)/documents/users/$(request.auth.uid)).data.displayName ||
-        getUserRole(request.auth.uid) in ['admin', 'checker']
-      );
-
-      // Only admins can delete.
+      allow update: if isStaff();
       allow delete: if isStaff() && getUserRole(request.auth.uid) == 'admin';
     }
 
     // == DELIVERIES ==
     match /deliveries/{deliveryId} {
       allow create: if isStaff();
-      // Allow listing if staff OR if the user is a driver (they can only query their own deliveries on the client)
-      allow list: if isStaff() || (request.auth != null && getUserRole(request.auth.uid) == 'driver');
-      // Allow reading a delivery if assigned driver or if staff.
-      allow read, update: if request.auth.uid == resource.data.driverUid || isStaff();
+      // Allow staff to list all deliveries, and drivers to list deliveries assigned to them.
+      allow list: if isStaff() || (isDriver() && request.query.where.driverUid == request.auth.uid);
+      // Allow reading a delivery if assigned driver, or if staff.
+      allow read, update: if (request.auth.uid == resource.data.driverUid || isStaff());
       // Public access for single delivery GET (for feedback page).
       allow get: if true;
     }
@@ -51,10 +48,8 @@ service cloud.firestore {
     match /pods/{podId} {
       // Public access for single POD GET (for QR code on receipts).
       allow get: if true; 
-
       // Only the assigned driver can create the POD record.
       allow create: if request.auth != null && request.auth.uid == request.resource.data.driverUid;
-      
       // Only admins can delete a POD record.
       allow delete: if request.auth != null && getUserRole(request.auth.uid) == 'admin';
     }
@@ -63,23 +58,21 @@ service cloud.firestore {
     match /feedback/{feedbackId} {
       // Anyone can submit feedback or get a single entry.
       allow get, create: if true;
-      
-      // Staff can list all feedback.
-      allow list: if request.auth != null && isStaff();
-
+      // Staff can list all feedback. Drivers can only list feedback for themselves.
+      allow list: if isStaff() || (isDriver() && request.query.where.driverUid == request.auth.uid);
       // Staff can read all feedback. Drivers can only read feedback about them.
-      allow read: if request.auth != null && (isStaff() || request.auth.uid == resource.data.driverUid);
+      allow read: if isStaff() || (isDriver() && request.auth.uid == resource.data.driverUid);
     }
-
+    
     // == OTHER COLLECTIONS ==
     match /clients/{doc=**} {
       // Only staff can read or write to the client list.
-      allow read, write: if request.auth != null && isStaff();
+      allow read, write: if isStaff();
     }
 
     match /deleted_jobfiles/{doc=**} {
       // Only admins can access the recycle bin.
-      allow read, write: if request.auth != null && getUserRole(request.auth.uid) == 'admin';
+      allow read, write: if isStaff() && getUserRole(request.auth.uid) == 'admin';
     }
   }
 }
