@@ -22,13 +22,13 @@ export default function DriverDashboard({ user }: { user: any }) {
     const [selectedDelivery, setSelectedDelivery] = useState<any | null>(null);
 
     useEffect(() => {
-        if (!user?.uid) {
+        if (!user?.userId) {
             setLoading(false);
             return;
         };
 
-        const deliveriesQuery = query(collection(db, "deliveries"), where("driverUid", "==", user.uid), orderBy("createdAt", "desc"));
-        const feedbackQuery = query(collection(db, "feedback"), where("driverUid", "==", user.uid));
+        const deliveriesQuery = query(collection(db, "deliveries"), where("driverUid", "==", user.userId), orderBy("createdAt", "desc"));
+        const feedbackQuery = query(collection(db, "feedback"), where("driverUid", "==", user.userId));
 
         const unsubDeliveries = onSnapshot(deliveriesQuery, (snapshot) => {
             const freshDeliveries = snapshot.docs.map(doc => {
@@ -63,7 +63,7 @@ export default function DriverDashboard({ user }: { user: any }) {
             unsubDeliveries();
             unsubFeedback();
         };
-    }, [user.uid]);
+    }, [user.userId]);
 
     const handleCompleteDelivery = (delivery: any) => {
         setSelectedDelivery(delivery);

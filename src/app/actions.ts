@@ -40,7 +40,11 @@ export async function login(prevState: any, formData: FormData) {
     const userDoc = await getDoc(userDocRef);
 
     if (userDoc.exists() && userDoc.data().status === 'active') {
-        await createSession(userCredential.user.uid, userDoc.data())
+        const userData = {
+            userId: userCredential.user.uid,
+            ...userDoc.data()
+        }
+        await createSession(userData)
     } else {
         const auth = getAuth();
         await signOut(auth);
