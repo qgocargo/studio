@@ -129,10 +129,11 @@ export async function logout() {
 
 export async function assignDelivery(data: any) {
     try {
-        const session = await getSession();
-        if (!session || !session.user) {
-            throw new Error("Unauthorized");
-        }
+        // NOTE: Temporarily disabled for no-login mode
+        // const session = await getSession();
+        // if (!session || !session.user) {
+        //     throw new Error("Unauthorized");
+        // }
         
         await addDoc(collection(db, 'deliveries'), {
             ...data,
@@ -150,10 +151,11 @@ export async function assignDelivery(data: any) {
 }
 
 export async function completeDelivery(formData: FormData) {
-    const session = await getSession();
-    if (!session || !session.user) {
-        return { success: false, message: "Unauthorized" };
-    }
+    // NOTE: Temporarily disabled for no-login mode
+    // const session = await getSession();
+    // if (!session || !session.user) {
+    //     return { success: false, message: "Unauthorized" };
+    // }
     
     const deliveryId = formData.get('deliveryId') as string;
     const receiverName = formData.get('receiverName') as string;
@@ -179,8 +181,8 @@ export async function completeDelivery(formData: FormData) {
             receiverMobile: receiverMobile,
             signatureDataUrl: signatureDataUrl,
             completedAt: serverTimestamp(),
-            driverUid: session.user.uid,
-            driverName: session.user.displayName,
+            driverUid: deliveryData.driverUid, // Using driver from original delivery data
+            driverName: deliveryData.driverName,
             ...(geo && { geolocation: geo.coords, geolocationName: geo.displayName })
         };
         
@@ -251,10 +253,11 @@ export async function submitFeedback(formData: FormData) {
 }
 
 export async function updateUserStatuses(statuses: { uid: string, status: string }[]) {
-    const session = await getSession();
-    if (!session || session.user.role !== 'admin') {
-        return { success: false, message: "Unauthorized" };
-    }
+    // NOTE: Temporarily disabled for no-login mode
+    // const session = await getSession();
+    // if (!session || session.user.role !== 'admin') {
+    //     return { success: false, message: "Unauthorized" };
+    // }
 
     const batch = writeBatch(db);
     statuses.forEach(({ uid, status }) => {
@@ -272,10 +275,11 @@ export async function updateUserStatuses(statuses: { uid: string, status: string
 }
 
 export async function cancelPod(deliveryId: string) {
-    const session = await getSession();
-    if (!session || session.user.role !== 'admin') {
-        return { success: false, message: "Unauthorized" };
-    }
+    // NOTE: Temporarily disabled for no-login mode
+    // const session = await getSession();
+    // if (!session || session.user.role !== 'admin') {
+    //     return { success: false, message: "Unauthorized" };
+    // }
 
     try {
         const batch = writeBatch(db);
