@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useFormState, useFormStatus } from "react-dom";
+import { useActionState } from "react";
+import { useFormStatus } from "react-dom";
 import { forgotPassword } from "@/app/actions";
 
 import { Button } from "@/components/ui/button";
@@ -21,7 +22,7 @@ function SubmitButton() {
 }
 
 export function ForgotPasswordForm() {
-  const [state, formAction] = useFormState(forgotPassword, null);
+  const [state, formAction] = useActionState(forgotPassword, null);
 
   return (
     <Card>
