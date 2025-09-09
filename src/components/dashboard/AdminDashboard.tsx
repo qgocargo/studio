@@ -18,8 +18,10 @@ export default function AdminDashboard({ user, initialData }: { user: any, initi
     const [selectedDeliveryId, setSelectedDeliveryId] = useState<string | null>(null);
 
     useEffect(() => {
-        // Only staff roles should listen to all deliveries in real-time.
-        if (user.role !== 'admin' && user.role !== 'user') {
+        // Only staff roles (admin, user) should listen to all deliveries in real-time.
+        const isStaff = user.role === 'admin' || user.role === 'user';
+        
+        if (!isStaff) {
             setLoading(false);
             return;
         }
