@@ -17,17 +17,16 @@ service cloud.firestore {
     // == USER PROFILES ==
     match /users/{userId} {
       allow create: if request.auth.uid == userId;
-      // Allow public list/read for dev, otherwise check roles
-      allow read, list: if request.auth == null || (request.auth != null && (request.auth.uid == userId || getUserRole(request.auth.uid) == 'admin'));
-      allow update: if request.auth != null && getUserRole(request.auth.uid) == 'admin';
-      allow delete: if request.auth != null && getUserRole(request.auth.uid) == 'admin' && resource.data.role != 'admin';
+      allow read: if request.auth.uid == userId || getUserRole(request.auth.uid) == 'admin';
+      allow list: if request.auth == null || getUserRole(request.auth.uid) == 'admin';
+      allow update: if getUserRole(request.auth.uid) == 'admin';
+      allow delete: if getUserRole(request.auth.uid) == 'admin' && resource.data.role != 'admin';
     }
 
     // == JOB FILES ==
     match /jobfiles/{jobfileId} {
-      // Allow public list/read for dev, otherwise check roles
-      allow read, list: if request.auth == null || (request.auth != null && isStaff());
-      allow create: if request.auth != null && isStaff();
+      // Allow staff (admin, checker, user) to read, list, and create.
+      allow read, list, create: if request.auth != null && isStaff();
 
       // Allow updates by the original creator, an admin, or a checker.
       allow update: if request.auth != null && (
@@ -36,7 +35,7 @@ service cloud.firestore {
       );
 
       // Only admins can delete.
-      allow delete: if request.auth != null && getUserRole(request.auth.uid) == 'admin';
+      allow delete: if getUserRole(request.auth.uid) == 'admin';
     }
 
     // == DELIVERIES ==
@@ -44,13 +43,15 @@ service cloud.firestore {
       // Public access for single delivery GET (for feedback page).
       allow get: if true;
 
-      // Allow public list for dev, otherwise check roles
-      allow list: if request.auth == null || (request.auth != null && isStaff());
-      allow create: if request.auth != null && isStaff();
+      // Staff can list all deliveries. Drivers can only access their own directly.
+      // Allow create without auth for no-login mode.
+      allow list: if request.auth != null && isStaff();
+      allow create: if true;
       
       // The assigned driver OR staff can read or update a delivery.
-      // Also allow public read for dev
-      allow read, update: if request.auth == null || (request.auth != null && (request.auth.uid == resource.data.driverUid || isStaff()));
+      allow read, update: if request.auth != null && (
+        request.auth.uid == resource.data.driverUid || isStaff()
+      );
     }
 
     // == PROOF OF DELIVERY (POD) ==
