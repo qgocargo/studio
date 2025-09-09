@@ -48,6 +48,8 @@ export default {
         border: 'hsl(var(--border))',
         input: 'hsl(var(--input))',
         ring: 'hsl(var(--ring))',
+        'qgo-blue': 'hsl(var(--qgo-blue))',
+        'qgo-teal': 'hsl(var(--qgo-teal))',
         chart: {
           '1': 'hsl(var(--chart-1))',
           '2': 'hsl(var(--chart-2))',
