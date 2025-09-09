@@ -5,10 +5,10 @@ export default function Home() {
   
   // Hardcoded user to bypass login and permission issues
   const mockUser = {
-    uid: 'admin-user-01',
-    displayName: 'Admin User',
-    role: 'admin',
-    email: 'admin@example.com',
+    uid: '02VoCEXFm9QfSxs3TCRaLdG5A4q1', // Example Driver UID
+    displayName: 'Test Driver',
+    role: 'driver',
+    email: 'driver@example.com',
     status: 'active'
   };
 
