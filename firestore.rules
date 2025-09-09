@@ -1,68 +1,49 @@
-
 rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-  
+
     // Helper functions
-    function isSignedIn() {
-      return request.auth != null;
+    function isOwner(userId) {
+      return request.auth.uid == userId;
     }
 
-    function isUser(uid) {
-      return isSignedIn() && request.auth.uid == uid;
-    }
-    
-    function isStaff() {
-      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['admin', 'user', 'checker'];
+    // Public read access for all collections needed by the app
+    match /{collection}/{docId} 
+      where collection in ['deliveries', 'users', 'jobfiles', 'pods', 'feedback'] {
+      allow read: if true;
     }
 
-    function isAdmin() {
-      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
-    }
-
-    // Collection: users
-    match /users/{userId} {
-      // Admins can read/write any user document
-      // Users can only read their own document
-      allow read: if isAdmin() || isUser(userId);
-      allow write: if isAdmin();
-      // Allow user creation for anyone signed up
-      allow create: if isSignedIn();
-    }
-
-    // Collection: deliveries
+    // Deliveries: Only authenticated users can create/update
     match /deliveries/{deliveryId} {
-      // Staff can read/write all deliveries
-      // Drivers can only read deliveries assigned to them
-      allow read: if isStaff() || (isSignedIn() && resource.data.driverUid == request.auth.uid);
-      allow write: if isStaff();
-      // Allow feedback submission by updating feedbackStatus
-      allow update: if isSignedIn() && request.resource.data.feedbackStatus == 'rated';
+      allow write: if request.auth != null;
     }
-    
-    // Collection: jobfiles
-    match /jobfiles/{jobFileId} {
-      // Only staff can read jobfiles
-      allow read: if isStaff();
-      allow write: if isStaff();
-    }
-    
-    // Collection: pods (Proof of Delivery)
+
+    // Pods: Only authenticated users can create/update
     match /pods/{podId} {
-        // Staff and the assigned driver can read the POD
-        allow read: if isStaff() || (isSignedIn() && get(/databases/$(database)/documents/deliveries/$(podId)).data.driverUid == request.auth.uid);
-        // Only staff can create/update/delete (e.g. cancel POD)
-        allow write: if isStaff();
+       allow write: if request.auth != null;
     }
     
-    // Collection: feedback
+    // Feedback: Anyone can create feedback
     match /feedback/{feedbackId} {
-        // Staff can read all feedback
-        // Drivers can read their own feedback
-        allow read: if isStaff() || (isSignedIn() && resource.data.driverUid == request.auth.uid);
-        // Any authenticated user can create feedback (i.e. the customer)
-        allow create: if isSignedIn();
+      allow create: if true;
+    }
+
+    // Users: Only an admin can update user status.
+    match /users/{userId} {
+      function isStaff() {
+        return request.auth.uid != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['admin', 'user', 'checker'];
+      }
+      allow create: if request.auth.uid == userId;
+      allow update: if isStaff();
+    }
+    
+    // Jobfiles: only staff can write
+     match /jobfiles/{jobfileId} {
+        function isStaff() {
+            return request.auth.uid != null && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['admin', 'user', 'checker'];
+        }
+        allow write: if isStaff();
     }
   }
 }
