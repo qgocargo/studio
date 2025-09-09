@@ -1,0 +1,21 @@
+{
+  "name": "Q'go Cargo POD",
+  "short_name": "Q'goPOD",
+  "start_url": "/index.html",
+  "display": "standalone",
+  "background_color": "#f9fafb",
+  "theme_color": "#243c5a",
+  "description": "Proof of Delivery application for Q'go Cargo.",
+  "icons": [
+    {
+      "src": "/assets/logo-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/assets/logo-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
