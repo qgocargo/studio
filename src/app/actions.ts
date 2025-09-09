@@ -123,6 +123,8 @@ export async function forgotPassword(prevState: any, formData: FormData) {
 
 
 export async function logout() {
+  const auth = getAuth();
+  await signOut(auth);
   await deleteSession()
   redirect('/login')
 }
