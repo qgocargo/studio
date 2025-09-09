@@ -12,6 +12,7 @@ async function getFirestoreData(user: any) {
     return { deliveries: [], feedback: [], jobFiles: [], users: [] };
   }
 
+  // Scoped queries based on user role to respect security rules
   const deliveriesQuery = user.role === 'driver' 
     ? query(collection(db, "deliveries"), where("driverUid", "==", user.uid), orderBy("createdAt", "desc"))
     : query(collection(db, 'deliveries'), orderBy("createdAt", "desc"));
@@ -30,7 +31,6 @@ async function getFirestoreData(user: any) {
     jobFilesPromise = getDocs(collection(db, 'jobfiles'));
   }
   
-  // Only admin can fetch all users as per security rules
   if (user.role === 'admin') {
     usersPromise = getDocs(collection(db, 'users'));
   }
@@ -45,6 +45,7 @@ async function getFirestoreData(user: any) {
   const deliveries = deliveriesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data(), createdAt: doc.data().createdAt?.toDate().toISOString(), completedAt: doc.data().completedAt?.toDate().toISOString() }));
   const feedback = feedbackSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data(), createdAt: doc.data().createdAt?.toDate().toISOString() }));
   const jobFiles = jobFilesSnapshot ? jobFilesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) : [];
+  // Only return all users if the current user is an admin
   const users = usersSnapshot ? usersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) : [];
 
   return { deliveries, feedback, jobFiles, users };
