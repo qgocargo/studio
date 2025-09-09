@@ -129,11 +129,10 @@ export async function logout() {
 
 export async function assignDelivery(data: any) {
     try {
-        // NOTE: Temporarily disabled for no-login mode
-        // const session = await getSession();
-        // if (!session || !session.user) {
-        //     throw new Error("Unauthorized");
-        // }
+        const session = await getSession();
+        if (!session || !session.user) {
+            throw new Error("Unauthorized");
+        }
         
         await addDoc(collection(db, 'deliveries'), {
             ...data,
@@ -151,11 +150,10 @@ export async function assignDelivery(data: any) {
 }
 
 export async function completeDelivery(formData: FormData) {
-    // NOTE: Temporarily disabled for no-login mode
-    // const session = await getSession();
-    // if (!session || !session.user) {
-    //     return { success: false, message: "Unauthorized" };
-    // }
+    const session = await getSession();
+    if (!session || !session.user) {
+        return { success: false, message: "Unauthorized" };
+    }
     
     const deliveryId = formData.get('deliveryId') as string;
     const receiverName = formData.get('receiverName') as string;
@@ -253,11 +251,10 @@ export async function submitFeedback(formData: FormData) {
 }
 
 export async function updateUserStatuses(statuses: { uid: string, status: string }[]) {
-    // NOTE: Temporarily disabled for no-login mode
-    // const session = await getSession();
-    // if (!session || session.user.role !== 'admin') {
-    //     return { success: false, message: "Unauthorized" };
-    // }
+    const session = await getSession();
+    if (!session || session.user.role !== 'admin') {
+        return { success: false, message: "Unauthorized" };
+    }
 
     const batch = writeBatch(db);
     statuses.forEach(({ uid, status }) => {
@@ -275,11 +272,10 @@ export async function updateUserStatuses(statuses: { uid: string, status: string
 }
 
 export async function cancelPod(deliveryId: string) {
-    // NOTE: Temporarily disabled for no-login mode
-    // const session = await getSession();
-    // if (!session || session.user.role !== 'admin') {
-    //     return { success: false, message: "Unauthorized" };
-    // }
+    const session = await getSession();
+    if (!session || session.user.role !== 'admin') {
+        return { success: false, message: "Unauthorized" };
+    }
 
     try {
         const batch = writeBatch(db);
@@ -303,3 +299,5 @@ export async function cancelPod(deliveryId: string) {
         return { success: false, message: error.message || "Failed to cancel POD." };
     }
 }
+
+    
