@@ -14,7 +14,7 @@ import { Skeleton } from '../ui/skeleton';
 export default function DriverDashboard({ user, initialDeliveries, initialFeedback }: { user: any, initialDeliveries: any[], initialFeedback: any[] }) {
     const [deliveries, setDeliveries] = useState(initialDeliveries);
     const [feedback, setFeedback] = useState(initialFeedback);
-    const [loading, setLoading] = useState(true);
+    const [loading, setLoading] = useState(!initialDeliveries.length);
 
     const [isCompletionModalOpen, setIsCompletionModalOpen] = useState(false);
     const [isReceiptModalOpen, setIsReceiptModalOpen] = useState(false);
@@ -22,6 +22,8 @@ export default function DriverDashboard({ user, initialDeliveries, initialFeedba
     const [selectedDelivery, setSelectedDelivery] = useState<any | null>(null);
 
     useEffect(() => {
+        if (!user?.uid) return;
+
         setLoading(true);
         const deliveriesQuery = query(collection(db, "deliveries"), where("driverUid", "==", user.uid), orderBy("createdAt", "desc"));
         const feedbackQuery = query(collection(db, "feedback"), where("driverUid", "==", user.uid));
@@ -36,6 +38,9 @@ export default function DriverDashboard({ user, initialDeliveries, initialFeedba
                 };
             });
             setDeliveries(freshDeliveries);
+            setLoading(false);
+        }, (error) => {
+            console.error("Error fetching deliveries:", error);
             setLoading(false);
         });
 

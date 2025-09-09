@@ -7,6 +7,10 @@ import PublicFeedbackView from '@/components/public/PublicFeedbackView'
 import MainApp from '@/components/dashboard/MainApp'
 
 async function getFirestoreData(user: any) {
+  if (!user || !user.uid) {
+    return { deliveries: [], feedback: [], jobFiles: [], users: [] };
+  }
+
   if (user.role === 'driver') {
     const deliveriesQuery = query(collection(db, "deliveries"), where("driverUid", "==", user.uid), orderBy("createdAt", "desc"));
     const feedbackQuery = query(collection(db, "feedback"), where("driverUid", "==", user.uid));
