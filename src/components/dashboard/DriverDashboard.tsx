@@ -14,7 +14,7 @@ import { Skeleton } from '../ui/skeleton';
 export default function DriverDashboard({ user, initialDeliveries, initialFeedback }: { user: any, initialDeliveries: any[], initialFeedback: any[] }) {
     const [deliveries, setDeliveries] = useState(initialDeliveries);
     const [feedback, setFeedback] = useState(initialFeedback);
-    const [loading, setLoading] = useState(false);
+    const [loading, setLoading] = useState(initialDeliveries.length === 0);
 
     const [isCompletionModalOpen, setIsCompletionModalOpen] = useState(false);
     const [isReceiptModalOpen, setIsReceiptModalOpen] = useState(false);
@@ -24,7 +24,11 @@ export default function DriverDashboard({ user, initialDeliveries, initialFeedba
     useEffect(() => {
         if (!user?.uid) return;
 
-        setLoading(true);
+        // Set loading to true only if there's no initial data
+        if (initialDeliveries.length === 0) {
+            setLoading(true);
+        }
+
         const deliveriesQuery = query(collection(db, "deliveries"), where("driverUid", "==", user.uid), orderBy("createdAt", "desc"));
         const feedbackQuery = query(collection(db, "feedback"), where("driverUid", "==", user.uid));
 
@@ -34,7 +38,8 @@ export default function DriverDashboard({ user, initialDeliveries, initialFeedba
                 return { 
                     id: doc.id, 
                     ...data,
-                    createdAt: data.createdAt?.toDate().toISOString() 
+                    createdAt: data.createdAt?.toDate().toISOString(),
+                    completedAt: data.completedAt?.toDate().toISOString()
                 };
             });
             setDeliveries(freshDeliveries);
@@ -60,7 +65,7 @@ export default function DriverDashboard({ user, initialDeliveries, initialFeedba
             unsubDeliveries();
             unsubFeedback();
         };
-    }, [user.uid]);
+    }, [user.uid, initialDeliveries.length]);
 
     const handleCompleteDelivery = (delivery: any) => {
         setSelectedDelivery(delivery);
@@ -83,7 +88,7 @@ export default function DriverDashboard({ user, initialDeliveries, initialFeedba
                 <Button onClick={handleViewFeedback} className="text-sm mt-3 sm:mt-0">My Feedback & Ratings</Button>
             </div>
 
-            {loading && initialDeliveries.length === 0 ? (
+            {loading ? (
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <Skeleton className="h-24" />
                     <Skeleton className="h-24" />
@@ -97,7 +102,7 @@ export default function DriverDashboard({ user, initialDeliveries, initialFeedba
                 tasks={deliveries}
                 onComplete={handleCompleteDelivery}
                 onViewReceipt={handleViewReceipt}
-                loading={loading && initialDeliveries.length === 0}
+                loading={loading}
             />
 
             {isCompletionModalOpen && selectedDelivery && (
