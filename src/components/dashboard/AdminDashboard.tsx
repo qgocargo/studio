@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from 'react';
@@ -9,44 +10,54 @@ import { DeliveriesList } from '@/components/dashboard/DeliveriesList';
 import ReceiptModal from '@/components/modals/ReceiptModal';
 import { Skeleton } from '../ui/skeleton';
 
-export default function AdminDashboard({ user, initialData }: { user: any, initialData: any }) {
-    const [deliveries, setDeliveries] = useState(initialData.deliveries || []);
-    const [loading, setLoading] = useState(false);
+export default function AdminDashboard({ user }: { user: any }) {
+    const [deliveries, setDeliveries] = useState([]);
+    const [jobFiles, setJobFiles] = useState([]);
+    const [users, setUsers] = useState([]);
+
+    const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
     const [isReceiptModalOpen, setIsReceiptModalOpen] = useState(false);
     const [selectedDeliveryId, setSelectedDeliveryId] = useState<string | null>(null);
 
     useEffect(() => {
-        // Only staff roles (admin, user) should listen to all deliveries in real-time.
         const isStaff = user.role === 'admin' || user.role === 'user';
-        
         if (!isStaff) {
             setLoading(false);
             return;
         }
 
-        setLoading(true);
-        const q = query(collection(db, 'deliveries'), orderBy('createdAt', 'desc'));
-        const unsubscribe = onSnapshot(q, (snapshot) => {
-            const freshDeliveries = snapshot.docs.map(doc => {
-                const data = doc.data();
-                return {
-                    id: doc.id,
-                    ...data,
-                    createdAt: data.createdAt?.toDate().toISOString(),
-                    completedAt: data.completedAt?.toDate().toISOString(),
-                };
-            });
-            setDeliveries(freshDeliveries);
-            setLoading(false);
-        }, (err) => {
-            console.error("Firestore Error (Deliveries):", err);
-            setError("Permission error: Could not load delivery data.");
-            setLoading(false);
-        });
+        const queries = [
+            { coll: 'deliveries', stateSetter: setDeliveries, q: query(collection(db, 'deliveries'), orderBy('createdAt', 'desc')) },
+            { coll: 'jobfiles', stateSetter: setJobFiles, q: query(collection(db, 'jobfiles')) },
+            { coll: 'users', stateSetter: setUsers, q: query(collection(db, 'users')) },
+        ];
 
-        return () => unsubscribe();
+        const unsubs = queries.map(({ coll, stateSetter, q }) => {
+            return onSnapshot(q, (snapshot) => {
+                const data = snapshot.docs.map(doc => ({
+                    id: doc.id,
+                    ...doc.data(),
+                    // Safely convert timestamps
+                    ...(doc.data().createdAt?.toDate && { createdAt: doc.data().createdAt.toDate().toISOString() }),
+                    ...(doc.data().completedAt?.toDate && { completedAt: doc.data().completedAt.toDate().toISOString() }),
+                }));
+                stateSetter(data as any);
+            }, (err) => {
+                console.error(`Firestore Error (${coll}):`, err);
+                setError(`Permission error: Could not load ${coll} data.`);
+            });
+        });
+        
+        // This is a simple way to know when initial loads are done.
+        // A more robust solution might use Promise.all with getDocs for initial load.
+        const initialLoadTimer = setTimeout(() => setLoading(false), 2500);
+
+        return () => {
+            unsubs.forEach(unsub => unsub());
+            clearTimeout(initialLoadTimer);
+        };
     }, [user.role]);
 
     const handleViewReceipt = (deliveryId: string) => {
@@ -56,15 +67,17 @@ export default function AdminDashboard({ user, initialData }: { user: any, initi
 
     const pendingDeliveries = deliveries.filter((d: any) => d.status !== 'Delivered');
     const completedDeliveries = deliveries.filter((d: any) => d.status === 'Delivered');
+    const activeDrivers = users.filter((u: any) => u.role === 'driver' && u.status === 'active');
+
 
     return (
         <div className="space-y-12">
             <StatCards deliveries={deliveries} />
 
-            <AssignDelivery jobFiles={initialData.jobFiles || []} drivers={initialData.users?.filter((u:any) => u.role === 'driver' && u.status === 'active') || []} />
+            <AssignDelivery jobFiles={jobFiles} drivers={activeDrivers} />
 
             <section className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                {loading ? (
+                {loading && deliveries.length === 0 ? (
                     <>
                         <div className="bg-white p-6 rounded-xl shadow-md space-y-4">
                             <Skeleton className="h-8 w-1/2" />

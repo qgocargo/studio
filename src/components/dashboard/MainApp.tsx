@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from "react";
@@ -11,6 +12,8 @@ export default function MainApp({ user, initialData }: { user: any; initialData:
   const [isAdminPanelOpen, setIsAdminPanelOpen] = useState(false);
   const [isDriverDashboardOpen, setIsDriverDashboardOpen] = useState(false);
 
+  // Since initialData is now empty, we pass it down but the components
+  // themselves are responsible for fetching what they need.
   return (
     <>
       <AppHeader
@@ -22,7 +25,7 @@ export default function MainApp({ user, initialData }: { user: any; initialData:
       {user.role === 'driver' ? (
         <DriverDashboard user={user} initialDeliveries={initialData.deliveries || []} initialFeedback={initialData.feedback || []} />
       ) : (
-        <AdminDashboard user={user} initialData={initialData} />
+        <AdminDashboard user={user} />
       )}
 
       {user.role === 'admin' && (
