@@ -299,5 +299,3 @@ export async function cancelPod(deliveryId: string) {
         return { success: false, message: error.message || "Failed to cancel POD." };
     }
 }
-
-    

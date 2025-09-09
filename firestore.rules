@@ -11,51 +11,58 @@ service cloud.firestore {
     // A list of internal staff roles that can access core data.
     function isStaff() {
       // Check for auth existence before trying to access uid.
-      return request.auth != null && getUserRole(request.auth.uid) in ['admin', 'user'];
+      return request.auth != null && getUserRole(request.auth.uid) in ['admin', 'checker', 'user'];
     }
 
     // == USER PROFILES ==
     match /users/{userId} {
-      allow create: if request.auth.uid == userId;
+      // Anyone can create an account (signup)
+      allow create;
+      // Users can read their own profile, admins can read any.
       allow read: if request.auth.uid == userId || getUserRole(request.auth.uid) == 'admin';
+      // Admins can list and update users.
       allow list, update: if getUserRole(request.auth.uid) == 'admin';
+      // Admins can delete users, but not other admins.
       allow delete: if getUserRole(request.auth.uid) == 'admin' && resource.data.role != 'admin';
     }
 
     // == JOB FILES ==
     match /jobfiles/{jobfileId} {
+      // Allow staff (admin, checker, user) to read, list, and create.
       allow read, list, create: if request.auth != null && isStaff();
-      allow update: if request.auth != null && (
-        resource.data.createdBy == get(/databases/$(database)/documents/users/$(request.auth.uid)).data.displayName ||
-        getUserRole(request.auth.uid) in ['admin', 'checker']
-      );
+      // Allow updates by an admin or a checker.
+      allow update: if request.auth != null && getUserRole(request.auth.uid) in ['admin', 'checker'];
+      // Only admins can delete.
       allow delete: if getUserRole(request.auth.uid) == 'admin';
     }
 
     // == DELIVERIES ==
     match /deliveries/{deliveryId} {
-      // Public access for single delivery GET (for feedback page).
+       // Public access for single delivery GET (for feedback page).
       allow get: if true;
+      // Staff can create and list all deliveries.
       allow list, create: if request.auth != null && isStaff();
-      allow read, update: if request.auth != null && (
-        request.auth.uid == resource.data.driverUid || isStaff()
-      );
+      // The assigned driver OR staff can read or update a delivery.
+      allow read, update: if request.auth != null && (request.auth.uid == resource.data.driverUid || isStaff());
     }
 
     // == PROOF OF DELIVERY (POD) ==
     match /pods/{podId} {
-      allow get: if true; 
+      // Public access for single POD GET (for QR code on receipts).
+      allow get: if true;
+      // The assigned driver can create the POD. Admins can delete it.
       allow create: if request.auth != null && request.auth.uid == request.resource.data.driverUid;
       allow delete: if request.auth != null && getUserRole(request.auth.uid) == 'admin';
     }
 
     // == FEEDBACK ==
     match /feedback/{feedbackId} {
-      allow get, create: if true;
+      // Anyone can submit feedback.
+      allow create: if true;
+      // Staff can list all feedback.
       allow list: if request.auth != null && isStaff();
+      // Staff can read all feedback. Drivers can only read their own.
       allow read: if request.auth != null && (isStaff() || request.auth.uid == resource.data.driverUid);
     }
   }
 }
-
-    
