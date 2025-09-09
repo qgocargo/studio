@@ -8,7 +8,7 @@ This is a pure static Progressive Web App for managing Proof of Deliveries, buil
 
 Before you can run the app, you need to add your Firebase project configuration.
 
-Open the `index.html` file and find the following placeholder script tag near the top of the `<body>`:
+Open both `index.html` and `track.html` files. Find the following placeholder script tag near the top of the `<body>`:
 
 ```html
 <!-- 
@@ -27,9 +27,17 @@ Open the `index.html` file and find the following placeholder script tag near th
 </script>
 ```
 
-Replace the placeholder values with the actual configuration object from your Firebase project. You will need to do the same for the `track.html` file.
+Replace the placeholder values in **both files** with the actual configuration object from your Firebase project.
 
-### 2. Run Locally
+### 2. Enable Firebase Services
+
+In your Firebase Console:
+
+1.  **Authentication**: Go to the "Authentication" section, click on the "Sign-in method" tab, and enable the **Email/Password** provider.
+2.  **Firestore**: Go to the "Firestore Database" section and create a database. Start in **production mode**. You will add security rules later.
+3.  **Storage**: Go to the "Storage" section and create a storage bucket.
+
+### 3. Run Locally
 
 You cannot open `index.html` directly in the browser due to CORS security policies with JavaScript modules. You need to serve the files using a local web server.
 
@@ -48,7 +56,7 @@ You cannot open `index.html` directly in the browser due to CORS security polici
 3.  **Open the app:**
     Open your browser and go to the local address provided by the server (usually `http://localhost:8080`).
 
-### 3. Deploy to GitHub Pages
+### 4. Deploy to GitHub Pages
 
 1.  **Create a GitHub Repository:**
     Create a new repository on GitHub and push the project files to it.
@@ -59,4 +67,9 @@ You cannot open `index.html` directly in the browser due to CORS security polici
     - Choose the branch you pushed your code to (e.g., `main`) and the folder as `/(root)`.
     - Click **Save**.
 
-GitHub will deploy your site and provide you with the public URL. It may take a few minutes for the site to become live.
+3.  **Authorize Domain in Firebase:**
+    - Go back to your Firebase Console -> Authentication -> Sign-in method.
+    - Under "Authorized domains", click **Add domain**.
+    - Add your GitHub Pages domain (e.g., `your-username.github.io`). **Do not include `https://` or the repository name.**
+
+It may take a few minutes for the site to become live.

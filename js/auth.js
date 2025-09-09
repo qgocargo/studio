@@ -10,28 +10,48 @@ let currentUser = null;
 export function initAuth(auth) {
     authInstance = auth;
 
-    document.getElementById('login-form').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const email = document.getElementById('email').value;
-        const password = document.getElementById('password').value;
-        const loginButton = document.getElementById('login-button');
-        const loginError = document.getElementById('login-error');
+    const loginForm = document.getElementById('login-form');
+    if (loginForm) {
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const loginButton = document.getElementById('login-button');
+            const loginError = document.getElementById('login-error');
 
-        loginButton.disabled = true;
-        loginButton.textContent = 'Signing in...';
-        loginError.textContent = '';
+            loginButton.disabled = true;
+            loginButton.textContent = 'Signing in...';
+            loginError.textContent = '';
 
-        try {
-            await signInWithEmailAndPassword(authInstance, email, password);
-            // Auth state change will handle the rest
-        } catch (error) {
-            console.error("Login failed:", error);
-            loginError.textContent = 'Invalid email or password.';
-            showToast('Login failed. Please check your credentials.', 'error');
-            loginButton.disabled = false;
-            loginButton.textContent = 'Sign in';
-        }
-    });
+            try {
+                await signInWithEmailAndPassword(authInstance, email, password);
+                // Auth state change will handle the rest
+            } catch (error) {
+                console.error("Login failed:", error.code, error.message);
+                let errorMessage = 'An unknown error occurred. Please try again.';
+                switch (error.code) {
+                    case 'auth/invalid-credential':
+                    case 'auth/user-not-found':
+                    case 'auth/wrong-password':
+                        errorMessage = 'Invalid email or password. Please check your credentials.';
+                        break;
+                    case 'auth/user-disabled':
+                        errorMessage = 'This user account has been disabled.';
+                        break;
+                    case 'auth/invalid-email':
+                        errorMessage = 'The email address is not valid.';
+                        break;
+                    case 'auth/network-request-failed':
+                        errorMessage = 'Network error. Please check your internet connection.';
+                        break;
+                }
+                loginError.textContent = errorMessage;
+                showToast(errorMessage, 'error');
+                loginButton.disabled = false;
+                loginButton.textContent = 'Sign in';
+            }
+        });
+    }
 }
 
 export async function handleAuthFlow(user) {
@@ -55,7 +75,6 @@ export async function handleAuthFlow(user) {
                 // Show analytics tab for admins
                 if(currentUser.role === 'admin' || currentUser.role === 'ops') {
                     document.querySelector('[data-tab="analytics"]').classList.remove('hidden');
-                    renderAnalyticsPage();
                 } else {
                      document.querySelector('[data-tab="analytics"]').classList.add('hidden');
                 }
@@ -66,7 +85,11 @@ export async function handleAuthFlow(user) {
             } else {
                 // Account is inactive or doesn't exist
                 await signOut(authInstance);
-                showToast('Your account is not active. Please contact an admin.', 'error');
+                showToast('Your account is not active or does not exist. Please contact an admin.', 'error');
+                currentUser = null;
+                loginPage.classList.remove('hidden');
+                appShell.classList.add('hidden');
+                document.body.classList.add('bg-gray-100');
             }
         } catch (error) {
             console.error("Error fetching user profile:", error);
@@ -101,6 +124,7 @@ export async function logout() {
     try {
         await signOut(authInstance);
         showToast('You have been logged out.');
+        // The onAuthStateChanged listener will handle UI changes.
     } catch (error) {
         console.error("Logout failed:", error);
         showToast('Logout failed. Please try again.', 'error');
