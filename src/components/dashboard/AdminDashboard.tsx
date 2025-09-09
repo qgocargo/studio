@@ -18,6 +18,12 @@ export default function AdminDashboard({ user, initialData }: { user: any, initi
     const [selectedDeliveryId, setSelectedDeliveryId] = useState<string | null>(null);
 
     useEffect(() => {
+        // Only staff roles should listen to all deliveries in real-time.
+        if (user.role !== 'admin' && user.role !== 'user') {
+            setLoading(false);
+            return;
+        }
+
         setLoading(true);
         const q = query(collection(db, 'deliveries'), orderBy('createdAt', 'desc'));
         const unsubscribe = onSnapshot(q, (snapshot) => {
@@ -39,7 +45,7 @@ export default function AdminDashboard({ user, initialData }: { user: any, initi
         });
 
         return () => unsubscribe();
-    }, []);
+    }, [user.role]);
 
     const handleViewReceipt = (deliveryId: string) => {
         setSelectedDeliveryId(deliveryId);
