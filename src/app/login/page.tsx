@@ -1,6 +1,7 @@
 "use client"
 
-import { useFormState, useFormStatus } from 'react-dom'
+import { useActionState } from 'react'
+import { useFormStatus } from 'react-dom'
 import { login } from '@/app/actions'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -21,7 +22,7 @@ function SubmitButton() {
 }
 
 export default function LoginPage() {
-    const [state, formAction] = useFormState(login, null)
+    const [state, formAction] = useActionState(login, null)
     const { toast } = useToast()
 
     useEffect(() => {
@@ -72,5 +73,3 @@ export default function LoginPage() {
     </div>
   )
 }
-
-    
