@@ -34,7 +34,7 @@ export default function MainApp({ user, initialData }: { user: any; initialData:
         />
       )}
       
-      {(user.role === 'admin' || user.role === 'staff') && (
+      {(user.role === 'admin' || user.role === 'user') && (
         <DriverPerformanceModal
             isOpen={isDriverDashboardOpen}
             onClose={() => setIsDriverDashboardOpen(false)}

@@ -12,7 +12,7 @@ interface AppHeaderProps {
 
 export function AppHeader({ user, onAdminPanelOpen, onDriverDashboardOpen }: AppHeaderProps) {
     const isAdmin = user.role === 'admin';
-    const isStaff = user.role === 'staff';
+    const isUser = user.role === 'user';
     
     return (
         <header className="flex flex-col sm:flex-row justify-between items-center mb-6 pb-4 border-b border-gray-200">
@@ -27,7 +27,7 @@ export function AppHeader({ user, onAdminPanelOpen, onDriverDashboardOpen }: App
                     Welcome, <span className="font-bold text-gray-800">{user.displayName}</span> (<span className="capitalize text-gray-600">{user.role}</span>)
                 </p>
                 <div className="flex items-center justify-end gap-4 mt-2">
-                    {(isAdmin || isStaff) && (
+                    {(isAdmin || isUser) && (
                         <Button onClick={onDriverDashboardOpen} variant="secondary" size="sm">Driver Dashboard</Button>
                     )}
                     {isAdmin && (
