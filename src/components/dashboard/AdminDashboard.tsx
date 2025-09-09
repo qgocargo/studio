@@ -44,6 +44,7 @@ export default function AdminDashboard({ user }: { user: any }) {
                     ...(doc.data().completedAt?.toDate && { completedAt: doc.data().completedAt.toDate().toISOString() }),
                 }));
                 stateSetter(data as any);
+                setError(null); // Clear previous errors on new data
             }, (err) => {
                 console.error(`Firestore Error (${coll}):`, err);
                 setError(`Permission error: Could not load ${coll} data.`);
@@ -77,7 +78,7 @@ export default function AdminDashboard({ user }: { user: any }) {
             <AssignDelivery jobFiles={jobFiles} drivers={activeDrivers} />
 
             <section className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                {loading && deliveries.length === 0 ? (
+                {loading ? (
                     <>
                         <div className="bg-white p-6 rounded-xl shadow-md space-y-4">
                             <Skeleton className="h-8 w-1/2" />
