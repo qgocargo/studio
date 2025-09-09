@@ -1,0 +1,62 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper function to get the role of the requesting user.
+    function getUserRole(userId) {
+      return get(/databases/$(database)/documents/users/$(userId)).data.role;
+    }
+
+    // A list of internal staff roles that can access core data.
+    function isStaff() {
+      return request.auth != null && getUserRole(request.auth.uid) in ['admin', 'user'];
+    }
+
+    // == USER PROFILES ==
+    match /users/{userId} {
+      allow create: if request.auth.uid == userId;
+      allow read, list: if isStaff();
+      allow update: if isStaff();
+      allow delete: if isStaff() && resource.data.role != 'admin';
+    }
+
+    // == JOB FILES ==
+    match /jobfiles/{jobfileId} {
+      allow read, list, create: if isStaff();
+      allow update: if isStaff();
+      allow delete: if isStaff() && getUserRole(request.auth.uid) == 'admin';
+    }
+
+    // == DELIVERIES ==
+    match /deliveries/{deliveryId} {
+      allow create: if isStaff();
+      // Allow drivers to query deliveries assigned to them, and staff to list all.
+      allow list: if isStaff() || (request.auth.uid == request.query.where.driverUid);
+      // Allow reading a delivery if assigned driver or if staff.
+      allow read, update: if request.auth.uid == resource.data.driverUid || isStaff();
+      // Public access for single delivery GET (for feedback page).
+      allow get: if true;
+    }
+
+    // == PROOF OF DELIVERY (POD) ==
+    match /pods/{podId} {
+      // Public access for single POD GET (for QR code on receipts).
+      allow get: if true; 
+      // Only the assigned driver can create the POD record.
+      allow create: if request.auth.uid == request.resource.data.driverUid;
+      // Only admins can delete a POD record.
+      allow delete: if getUserRole(request.auth.uid) == 'admin';
+    }
+
+    // == FEEDBACK ==
+    match /feedback/{feedbackId} {
+      // Anyone can submit feedback or get a single entry.
+      allow get, create: if true;
+      // Staff can list all feedback. Drivers can only list feedback for them.
+      allow list: if isStaff() || (request.auth.uid == request.query.where.driverUid);
+      // Staff can read all feedback. Drivers can only read feedback about them.
+      allow read: if isStaff() || request.auth.uid == resource.data.driverUid;
+    }
+  }
+}
